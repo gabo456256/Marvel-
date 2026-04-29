@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Marvel: Amar | Multi-Character Experience</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Playfair+Display:ital,wght@1,600&display=swap');
+
+        :root {
+            --red-marvel: #ed1d24;
+            --gold: #d4af37;
+            --bg-color: #0a0a0a;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle, #222 0%, #000 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Bebas Neue', sans-serif;
+        }
+
+        .scene {
+            width: 380px;
+            height: 500px;
+            perspective: 2500px;
+        }
+
+        .book {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .book.open {
+            transform: translateX(50%) rotateY(-10deg);
+        }
+
+        /* Páginas */
+        .page {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            transform-origin: left;
+            transform-style: preserve-3d;
+            transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 4px 15px 15px 4px;
+            box-shadow: 10px 10px 25px rgba(0,0,0,0.5);
+        }
+
+        /* Portada Premium */
+        .cover-front {
+            background: linear-gradient(135deg, #ed1d24 0%, #8b0000 100%);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            backface-visibility: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .cover-front h1 {
+            font-size: 5.5rem;
+            color: white;
+            margin: 0;
+            letter-spacing: -2px;
+            line-height: 0.8;
+            border: 5px solid white;
+            padding: 10px 20px;
+            text-shadow: 3px 3px 0px rgba(0,0,0,0.2);
+        }
+
+        .cover-front span {
+            font-family: 'Playfair Display', serif;
+            color: var(--gold);
+            font-size: 2.8rem;
+            margin-top: 15px;
+            font-style: italic;
+        }
+
+        /* Página Interior Dinámica */
+        .page-content {
+            background: #fdf6e3;
+            z-index: 1;
+            padding: 40px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-left: 10px solid rgba(0,0,0,0.05);
+        }
+
+        .char-info h2 {
+            font-size: 3rem;
+            margin: 0;
+            color: var(--char-color, #ed1d24);
+            border-bottom: 3px solid #ddd;
+        }
+
+        .char-info p {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            color: #333;
+            margin-top: 20px;
+            line-height: 1.4;
+        }
+
+        /* Animación de apertura */
+        .book.open .cover-front {
+            transform: rotateY(-170deg);
+        }
+
+        /* Lomo del libro */
+        .book::before {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 100%;
+            left: -20px;
+            background: #8b0000;
+            transform: rotateY(-90deg);
+            transform-origin: right;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Audio Genérico de Página (puedes añadir los de personajes aquí) -->
+    <audio id="pageSound" src="https://www.soundjay.com/misc/sounds/page-flip-02.mp3"></audio>
+
+    <div class="scene">
+        <div class="book" id="book" onclick="handleBookClick()">
+            
+            <div class="page page-content" id="content">
+                <div class="char-info">
+                    <h2 id="charName">Peter & Mary Jane</h2>
+                    <p id="charQuote">"Reconócelo, Tigre... te acaba de tocar la lotería."</p>
+                </div>
+                <div style="font-size: 1.2rem; color: #999;">Toca para cambiar de historia</div>
+            </div>
+
+            <div class="page cover-front">
+                <h1>MARVEL</h1>
+                <span>Amar</span>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const characters = [
+            {
+                name: "Peter & Mary Jane",
+                quote: "No importa lo que pase, siempre serás mi hogar.",
+                color: "#ed1d24"
+            },
+            {
+                name: "Wanda & Vision",
+                quote: "¿Qué es el amor, si no la perseverancia del duelo?",
+                color: "#9b111e"
+            },
+            {
+                name: "Steve & Peggy",
+                quote: "He esperado mucho tiempo por este baile.",
+                color: "#1d4ed8"
+            },
+            {
+                name: "Tony & Pepper",
+                quote: "Te amo tres mil.",
+                color: "#d4af37"
+            }
+        ];
+
+        let currentChar = 0;
+        const book = document.getElementById('book');
+        const sound = document.getElementById('pageSound');
+
+        function handleBookClick() {
+            if (!book.classList.contains('open')) {
+                // Abrir por primera vez
+                book.classList.add('open');
+                sound.play();
+            } else {
+                // Si ya está abierto, cambiar personaje con efecto de "pasado"
+                currentChar = (currentChar + 1) % characters.length;
+                updateContent();
+                sound.currentTime = 0;
+                sound.play();
+            }
+        }
+
+        function updateContent() {
+            const char = characters[currentChar];
+            document.getElementById('charName').innerText = char.name;
+            document.getElementById('charQuote').innerText = `"${char.quote}"`;
+            document.getElementById('content').style.setProperty('--char-color', char.color);
+        }
+    </script>
+</body>
+</html>
